@@ -1,0 +1,7 @@
+051.Data
+061.Data*
+101.Exploration
+*/venv
+*/plots
+*.tsv
+.idea
