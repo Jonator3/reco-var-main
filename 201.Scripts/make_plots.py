@@ -38,7 +38,6 @@ def print_mat(mat):
 
 
 def plot_df(df, seperator_col, value_cols, negatives=[], limit_y=True):
-    title = "_".join(value_cols) + "_separate_by_" + seperator_col
     prompts = [val for val in df[seperator_col].unique()]
 
     # data to plot
@@ -78,7 +77,6 @@ def plot_df(df, seperator_col, value_cols, negatives=[], limit_y=True):
     x_ticks = []
     for i in range(1, len(data_dict.keys()) + 1):
         x_ticks.append(center * (2 * i - 1))
-    print(x_ticks)
     ax.set_xticks(x_ticks)
     ax.set_xticklabels(data_dict.keys(), rotation=45, fontsize=15)
     ax.tick_params(axis='y', labelsize=15)
@@ -98,7 +96,7 @@ def plot_df(df, seperator_col, value_cols, negatives=[], limit_y=True):
             legend_list.append(col)
     outlier, = plot([1, 1], 'o', markeredgecolor='black', markerfacecolor='white')
     mean, = plot([1, 1], 'D', markeredgecolor='black', markerfacecolor='red')
-    legend((h1, h2, h3, h4, h5, outlier, mean), value_cols, loc="lower right", fontsize=15)
+    legend((h1, h2, h3, h4, h5, outlier, mean), legend_list, loc="lower right", fontsize=15)
     h1.set_visible(False)
     h2.set_visible(False)
     h3.set_visible(False)
@@ -111,6 +109,8 @@ def plot_df(df, seperator_col, value_cols, negatives=[], limit_y=True):
         os.mkdir("plots")
     except FileExistsError:
         pass
+
+    title = "_".join(legend_list) + "_separate_by_" + seperator_col
     savefig("plots/"+title+".png")
     show()
 
@@ -128,7 +128,7 @@ def pearson_mat(df):
 
 if __name__ == "__main__":
     print("Running test.py")
-    features = ["FractionUnique", "meanLevenstein", "meanGST"]
+    features = ["FractionUnique", "meanLevenstein", "meanGST", "meanLCS", "meanVCos"]
     negative_features = ["meanGST", "meanVCos"]
 
     df = pd.read_csv("variance.tsv", sep="\t")
