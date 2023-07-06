@@ -129,7 +129,7 @@ def pearson_mat(df):
 if __name__ == "__main__":
     print("Running test.py")
     features = ["FractionUnique", "meanLevenstein", "meanGST", "meanLCS", "meanVCos"]
-    negative_features = ["meanGST", "meanVCos"]
+    negative_features = ["meanGST", "meanVCos", "meanLCS"]
 
     df = pd.read_csv("variance.tsv", sep="\t")
     df_feature = df[features]
