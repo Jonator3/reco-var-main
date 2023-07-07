@@ -54,8 +54,9 @@ def plot_df(df, seperator_col, value_cols, negatives=[], limit_y=True):
 
         data_dict[p] = values
 
-    fig = figure(figsize=(len(prompts), 8))
-    fig.subplots_adjust(bottom=0.15)
+    legend_space = 3
+    fig = figure(figsize=(len(prompts)+legend_space, 8))
+    fig.subplots_adjust(bottom=0.25, right=1-(legend_space/(len(prompts)+legend_space)), top=0.95)
     ax = axes()
 
     meanpointprops = dict(marker='D', markeredgecolor='black', markerfacecolor='red')
@@ -69,7 +70,7 @@ def plot_df(df, seperator_col, value_cols, negatives=[], limit_y=True):
         setBoxColors(bp)
 
     # set axes limits and labels
-    xlim(0, 42)
+    xlim(0, len(data_dict.keys())*6)
     if limit_y:
         ylim(0, 1)
 
@@ -96,7 +97,7 @@ def plot_df(df, seperator_col, value_cols, negatives=[], limit_y=True):
             legend_list.append(col)
     outlier, = plot([1, 1], 'o', markeredgecolor='black', markerfacecolor='white')
     mean, = plot([1, 1], 'D', markeredgecolor='black', markerfacecolor='red')
-    legend((h1, h2, h3, h4, h5, outlier, mean), legend_list, loc="lower right", fontsize=15)
+    legend((h1, h2, h3, h4, h5, outlier, mean), legend_list, loc=(1 + (0.2/len(prompts)), 0), fontsize=15)
     h1.set_visible(False)
     h2.set_visible(False)
     h3.set_visible(False)
