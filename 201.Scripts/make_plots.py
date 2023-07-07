@@ -56,7 +56,7 @@ def plot_df(df, seperator_col, value_cols, negatives=[], limit_y=True):
 
     legend_space = 3
     fig = figure(figsize=(len(prompts)+legend_space, 8))
-    fig.subplots_adjust(bottom=0.25, right=1-(legend_space/(len(prompts)+legend_space)), top=0.95)
+    fig.subplots_adjust(bottom=0.25, right=1-(legend_space/(len(prompts)+legend_space)), top=0.95, left=1/(len(prompts)+legend_space))
     ax = axes()
 
     meanpointprops = dict(marker='D', markeredgecolor='black', markerfacecolor='red')
