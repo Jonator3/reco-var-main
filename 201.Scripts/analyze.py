@@ -52,9 +52,14 @@ print("\n__________________________")
 
 #exit()
 
-# create new table for variability measures
+measures = {
+    "GST": text_similarity.gst,
+    "LCS": text_similarity.longest_common_substring,
+    "Levenstein": text_similarity.levenshtein_distance,
+    "VCos": text_similarity.vector_cosine
+}
 
-df_var = pd.DataFrame(columns = ["Language", "Variable", "numAnswers", "meanLen"])
+df_var = pd.DataFrame(columns = ["Language", "Variable", "numAnswers", "meanLen", "FractionUnique"] + ["mean"+m for m in measures.keys()])
 for lang in df['Language'].unique():
     #print(lang)
     for var in df['Variable'].unique():
@@ -66,8 +71,11 @@ for lang in df['Language'].unique():
 
         len_list = [len(str(val)) for val in df_prompt["Value"]]
         meanLen = sum(len_list)/len(len_list)
+        fractionUnique = getFractionUnique(df_prompt)
+
+        measure_vals = [getMeanVal(df_prompt, measures.get(m)) for m in measures.keys()]
 
 
         #print("{:.4f}".format(num))
-        df_var.loc[len(df_var.index)] = [lang, var, len(df_prompt), meanLen]
+        df_var.loc[len(df_var.index)] = [lang, var, len(df_prompt), meanLen, fractionUnique] + measure_vals
         df_var.to_csv('variance.tsv', sep="\t")
