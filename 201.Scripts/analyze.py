@@ -8,16 +8,9 @@ import text_similarity
 import parallelprozessing
 
 
-# a very basic variance measure: the percentage of unique answers.
-# there are indeed completely repetitive answers, this is not an artifact of large numbers of empty answers
-def getFractionUnique(df):
-    all = len(df)
-    unique = len(df["Value"].unique())
-    # print(df["Value"].value_counts()) # for sanity checking
-    # print(all, unique)
-    return unique/all
 
-
+#TODO: ungünstige Benennung, weil Value hier ja auch schon die Bezeichnung für die einzelnen Antworten ist.
+#TODO: Etas mehr Doku: wozu ist die step-size da?
 def getMeanVal(df, func):
     step_size = 24
     values = [str(val) for val in df["Value"]]
@@ -50,8 +43,9 @@ table = pd.pivot_table(df, values='Value', index=['Language'], columns=['Variabl
 print(table)
 print("\n__________________________")
 
-#exit()
+exit()
 
+#TODO: alle Maße auch noch auf String-Ebene
 measures = {
     "GST": text_similarity.gst,
     "LCS": text_similarity.longest_common_substring,
@@ -65,8 +59,8 @@ for lang in df['Language'].unique():
     for var in df['Variable'].unique():
         #print(var)
         df_prompt = df[(df['Language'] == lang) & (df['Variable'] == var)]
-        if len(df_prompt) > 3000:
-            continue
+        #if len(df_prompt) > 3000:
+        #    continue
         print(lang, var, len(df_prompt))
 
         len_list = [len(str(val)) for val in df_prompt["Value"]]
@@ -74,8 +68,6 @@ for lang in df['Language'].unique():
         fractionUnique = getFractionUnique(df_prompt)
 
         measure_vals = [getMeanVal(df_prompt, measures.get(m)) for m in measures.keys()]
-
-
         #print("{:.4f}".format(num))
         df_var.loc[len(df_var.index)] = [lang, var, len(df_prompt), meanLen, fractionUnique] + measure_vals
-        df_var.to_csv('variance.tsv', sep="\t")
+df_var.to_csv('variance.tsv', sep="\t")
