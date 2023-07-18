@@ -1,3 +1,4 @@
+import os
 import time
 
 import pandas as pd
@@ -15,18 +16,34 @@ def getMeanLen(df):
     return meanLen
 
 
-def getMeanMeasureValue(df, func):
+def getMeanMeasureValues(df, measures):
+    measure_names = [name for name in measures.keys()]
     values = [str(val) for val in df["Value"]]
+    marker = ['IDSTUD', 'LanguageCode', 'Language', 'CountryIsoCode', 'Variable', 'AssessmentResultId', 'SessionId']
+    marker_values = [[val for val in df[mark]] for mark in marker]
+    df_res = pd.DataFrame(columns=[m + "_A" for m in marker] + [m + "_B" for m in marker] + [m for m in measures.keys()])
+    lang = [l for l in df["Language"]][0]
+    prompt = [p for p in df["Variable"]][0]
 
-    total = 0
+    total = [0 for _ in measure_names]
     t_len = 0
+
     for si in range(len(values)):
         v0 = values[si]
         for vi in values[si+1:]:
-            total += func(v0, vi)[1]
+            measure_res = [func(v0, vi)[1] for func in [measures.get(m) for m in measure_names]]
+            df_res.loc[len(df_res.index)] = [marker_values[si] for _ in marker] + measure_res
+            for i in range(len(total)):
+                total[i] += measure_res[i]
         t_len += len(values) - 1 - si
 
-    return total / t_len  # mean val
+    try:
+        os.makedirs("results/" + lang)
+    except FileExistsError:
+        pass
+    df_res.to_csv("results/"+lang+"/"+prompt+".tsv", sep="\t")
+
+    return [v/t_len for v in total]
 
 
 df = pd.read_csv("../051.Data/411.merged_CSV/data.CSV", sep=";")
@@ -62,7 +79,7 @@ def run_task(lang, var):
     print(lang, var, len(df_prompt))
 
     cb_vals = [corpus_based_measures.get(m)(df_prompt) for m in corpus_based_measures.keys()]
-    tb_vals = [getMeanMeasureValue(df_prompt, text_based_measures.get(m)) for m in text_based_measures.keys()]
+    tb_vals = getMeanMeasureValues(df_prompt, text_based_measures)
 
     return [lang, var, len(df_prompt)] + cb_vals + tb_vals
 

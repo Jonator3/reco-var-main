@@ -132,13 +132,14 @@ def vector_cosine(text1, text2, lemmatize=False):
         tokens1 = [lemmatizer.lemmatize(token) for token in tokens1]
         tokens2 = [lemmatizer.lemmatize(token) for token in tokens2]
 
-    if len(tokens1) == 0 or len(tokens2) == 0:
-        return 0, 0, []
 
     # Remove stopwords
     stop_words = stopwords.words('english')
     tokens1 = [token for token in tokens1 if token not in stop_words]
     tokens2 = [token for token in tokens2 if token not in stop_words]
+
+    if len(tokens1) == 0 or len(tokens2) == 0:
+        return 0, 0, []
 
     # Create the TF-IDF vectors
     vectorizer = TfidfVectorizer()
@@ -147,15 +148,8 @@ def vector_cosine(text1, text2, lemmatize=False):
     except ValueError:
         return 1, 1, []
 
-    try :
-        vector1 = vectorizer.transform(tokens1)
-        vector2 = vectorizer.transform(tokens2)
-    except ValueError:
-        print("ValueError in Vcos:")
-        print(tokens1)
-        print(tokens2)
-        print()
-        return 0, 0, []
+    vector1 = vectorizer.transform(tokens1)
+    vector2 = vectorizer.transform(tokens2)
     vector1 = np.asarray(vector1.sum(axis=0)[0])
     vector2 = np.asarray(vector2.sum(axis=0)[0])
 
