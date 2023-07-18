@@ -30,10 +30,10 @@ def getMeanMeasureValues(df, measures):
 
     for si in range(len(values)):
         v0 = values[si]
-        for si2 in range(si, len(values)):
+        for si2 in range(si+1, len(values)):
             vi = values[si2]
             measure_res = [func(v0, vi)[1] for func in [measures.get(m) for m in measure_names]]
-            df_res.loc[len(df_res.index)] = [marker_values[si] for _ in marker] + [marker_values[si2] for _ in marker] + measure_res
+            df_res.loc[len(df_res.index)] = [val[si] for val in marker_values] + [val[si2] for val in marker_values] + measure_res
             for i in range(len(total)):
                 total[i] += measure_res[i]
         t_len += len(values) - 1 - si
