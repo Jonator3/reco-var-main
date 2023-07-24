@@ -6,3 +6,7 @@
 *.tsv
 .idea
 .log
+*test.py
+*train.txt
+*spm.model
+*spm.vocab

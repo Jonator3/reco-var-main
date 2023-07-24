@@ -16,12 +16,10 @@ def getMeanLen(df):
     return meanLen
 
 
-def getMeanMeasureValues(df, measures):
+def getMeanMeasureValues(df, measures, verbose=False):
     measure_names = [name for name in measures.keys()]
     values = [str(val) for val in df["Value"]]
-    marker = ['IDSTUD', 'LanguageCode', 'Language', 'CountryIsoCode', 'Variable', 'AssessmentResultId', 'SessionId']
-    marker_values = [[val for val in df[mark]] for mark in marker]
-    df_res = pd.DataFrame(columns=[m + "_A" for m in marker] + [m + "_B" for m in marker] + [m for m in measures.keys()])
+    df_res = pd.DataFrame(columns=["Value_A", "Value_B"] + [m for m in measures.keys()])
     lang = [l for l in df["Language"]][0]
     prompt = [p for p in df["Variable"]][0]
 
@@ -32,17 +30,25 @@ def getMeanMeasureValues(df, measures):
         v0 = values[si]
         for si2 in range(si+1, len(values)):
             vi = values[si2]
-            measure_res = [func(v0, vi)[1] for func in [measures.get(m) for m in measure_names]]
-            df_res.loc[len(df_res.index)] = [val[si] for val in marker_values] + [val[si2] for val in marker_values] + measure_res
+            if values[:si].__contains__(v0):
+                df_cach = df_res[df_res["Value_A"] == v0]
+                df_cach = df_cach[df_cach["Value_B"] == vi]
+                index = [i for i in df_cach.index][0]
+                df_res.loc[len(df_res.index)] = list(df_res.loc[index])
+            else:
+                measure_res = [func(v0, vi)[1] for func in [measures.get(m) for m in measure_names]]
+                df_res.loc[len(df_res.index)] = [values[si], values[si2]] + measure_res
             for i in range(len(total)):
                 total[i] += measure_res[i]
         t_len += len(values) - 1 - si
+        if verbose:
+            print("Done", si+1, "/", len(values))
 
     try:
-        os.makedirs("results/" + lang)
+        os.makedirs("results/" + lang + "/" + prompt)
     except FileExistsError:
         pass
-    df_res.to_csv("results/"+lang+"/"+prompt+".tsv", sep="\t")
+    df_res.to_csv("results/"+lang+"/"+prompt+"/"+"_".join(measure_names)+".tsv", sep="\t")
 
     return [v/t_len for v in total]
 
@@ -80,7 +86,10 @@ def run_task(lang, var):
     print(lang, var, len(df_prompt))
 
     cb_vals = [corpus_based_measures.get(m)(df_prompt) for m in corpus_based_measures.keys()]
-    tb_vals = getMeanMeasureValues(df_prompt, text_based_measures)
+    tb_vals = []
+    for measure in text_based_measures.keys():
+        dict = {measure: text_based_measures.get(measure)}
+        tb_vals.append(getMeanMeasureValues(df_prompt, dict)[0])
 
     return [lang, var, len(df_prompt)] + cb_vals + tb_vals
 
