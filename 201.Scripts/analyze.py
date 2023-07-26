@@ -102,7 +102,7 @@ for lang in df['Language'].unique():
     for var in df['Variable'].unique():
         tasks_args.append((lang, var))
 
-results = parallelprozessing.run_mono(run_task, tasks_args)
+results = parallelprozessing.run_parallel(run_task, tasks_args)
 #print("{:.4f}".format(num))
 for res in results:
     df_var.loc[len(df_var.index)] = res
