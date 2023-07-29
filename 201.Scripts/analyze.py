@@ -19,6 +19,7 @@ def getMeanLen(df):
 def getMeanMeasureValues(df, measures, verbose=False):
     measure_names = [name for name in measures.keys()]
     values = [str(val) for val in df["Value"]]
+    ids = [id for id in df["IDSTUD"]]
     lang = [l for l in df["Language"]][0]
     prompt = [p for p in df["Variable"]][0]
 
@@ -30,14 +31,14 @@ def getMeanMeasureValues(df, measures, verbose=False):
     except FileExistsError:
         pass
     tsv_file = csv_writer(open("results/"+lang+"/"+prompt+"/"+"_".join(measure_names)+".tsv", "w+"), delimiter="\t")
-    tsv_file.writerow(["Value_A", "Value_B"] + [m for m in measures.keys()])
+    tsv_file.writerow(["IDSTUD_A", "Value_A", "IDSTUD_B", "Value_B"] + [m for m in measures.keys()])
 
     for si in range(len(values)):
         v0 = values[si]
         for si2 in range(si+1, len(values)):
             vi = values[si2]
             measure_res = [func(v0, vi)[1] for func in [measures.get(m) for m in measure_names]]
-            tsv_file.writerow([values[si], values[si2]] + measure_res)
+            tsv_file.writerow([ids[si], values[si], ids[si2], values[si2]] + measure_res)
             for i in range(len(total)):
                 total[i] += measure_res[i]
         t_len += len(values) - 1 - si
@@ -48,6 +49,10 @@ def getMeanMeasureValues(df, measures, verbose=False):
 
 
 df = pd.read_csv("../051.Data/411.merged_CSV/data.CSV", sep=";")
+
+# filter Dataset
+df = df[['IDSTUD', 'Language', 'Variable', 'Value']].drop_duplicates()
+
 print(df)
 print(df.groupby(["Language"])["Value"].count())
 print(df.groupby(["Variable"])["Value"].count())
@@ -63,9 +68,9 @@ print("\n__________________________")
 #TODO: alle Maße auch noch auf String-Ebene
 text_based_measures = {
     "GST": text_similarity.gst,
-    "LCS": text_similarity.longest_common_substring,
-    "Levenstein": text_similarity.levenshtein_distance,
-    "VCos": text_similarity.vector_cosine
+#    "LCS": text_similarity.longest_common_substring,
+#    "Levenstein": text_similarity.levenshtein_distance,
+#    "VCos": text_similarity.vector_cosine
 }
 
 corpus_based_measures = {
