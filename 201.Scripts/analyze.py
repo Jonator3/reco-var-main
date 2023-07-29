@@ -1,5 +1,5 @@
 import os
-import time
+from csv import writer as csv_writer
 
 import pandas as pd
 import numpy as np
@@ -19,36 +19,30 @@ def getMeanLen(df):
 def getMeanMeasureValues(df, measures, verbose=False):
     measure_names = [name for name in measures.keys()]
     values = [str(val) for val in df["Value"]]
-    df_res = pd.DataFrame(columns=["Value_A", "Value_B"] + [m for m in measures.keys()])
     lang = [l for l in df["Language"]][0]
     prompt = [p for p in df["Variable"]][0]
 
     total = [0 for _ in measure_names]
     t_len = 0
 
+    try:
+        os.makedirs("results/" + lang + "/" + prompt)
+    except FileExistsError:
+        pass
+    tsv_file = csv_writer(open("results/"+lang+"/"+prompt+"/"+"_".join(measure_names)+".tsv", "w+"), delimiter="\t")
+    tsv_file.writerow(["Value_A", "Value_B"] + [m for m in measures.keys()])
+
     for si in range(len(values)):
         v0 = values[si]
         for si2 in range(si+1, len(values)):
             vi = values[si2]
-            if values[:si].__contains__(v0):
-                df_cach = df_res[df_res["Value_A"] == v0]
-                df_cach = df_cach[df_cach["Value_B"] == vi]
-                index = [i for i in df_cach.index][0]
-                df_res.loc[len(df_res.index)] = list(df_res.loc[index])
-            else:
-                measure_res = [func(v0, vi)[1] for func in [measures.get(m) for m in measure_names]]
-                df_res.loc[len(df_res.index)] = [values[si], values[si2]] + measure_res
+            measure_res = [func(v0, vi)[1] for func in [measures.get(m) for m in measure_names]]
+            tsv_file.writerow([values[si], values[si2]] + measure_res)
             for i in range(len(total)):
                 total[i] += measure_res[i]
         t_len += len(values) - 1 - si
         if verbose:
             print("Done", si+1, "/", len(values))
-
-    try:
-        os.makedirs("results/" + lang + "/" + prompt)
-    except FileExistsError:
-        pass
-    df_res.to_csv("results/"+lang+"/"+prompt+"/"+"_".join(measure_names)+".tsv", sep="\t")
 
     return [v/t_len for v in total]
 
