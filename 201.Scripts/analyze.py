@@ -16,42 +16,39 @@ def getMeanLen(df):
     return meanLen
 
 
-def getMeanMeasureValues(df, measures, verbose=False):
-    measure_names = [name for name in measures.keys()]
+def getMeanMeasureValues(df, measure, verbose=False):
     values = [str(val) for val in df["Value"]]
-    ids = [id for id in df["IDSTUD"]]
+    ids = [str(id) for id in df["IDSTUD"]]
     lang = [l for l in df["Language"]][0]
     prompt = [p for p in df["Variable"]][0]
 
-    total = [0 for _ in measure_names]
+    total = 0
     t_len = 0
 
     try:
         os.makedirs("results/" + lang + "/" + prompt)
     except FileExistsError:
         pass
-    tsv_file = csv_writer(open("results/"+lang+"/"+prompt+"/"+"_".join(measure_names)+".tsv", "w+"), delimiter="\t")
-    tsv_file.writerow(["IDSTUD_A", "Value_A", "IDSTUD_B", "Value_B"] + [m for m in measures.keys()])
+    tsv_file = csv_writer(open("results/"+lang+"/"+prompt+"/"+measure+".tsv", "w+"), delimiter="\t")
+    tsv_file.writerow([measure] + ids)
 
     for si in range(len(values)):
         v0 = values[si]
+        line = [ids[si]] + ["-" for _ in range(si)]
         for si2 in range(si+1, len(values)):
             vi = values[si2]
-            measure_res = [func(v0, vi)[1] for func in [measures.get(m) for m in measure_names]]
-            tsv_file.writerow([ids[si], values[si], ids[si2], values[si2]] + measure_res)
-            for i in range(len(total)):
-                total[i] += measure_res[i]
+            measure_res = text_based_measures.get(measure)(v0, vi)[1]
+            line.append(measure_res)
+            total += measure_res
         t_len += len(values) - 1 - si
+        tsv_file.writerow(line)
         if verbose:
             print("Done", si+1, "/", len(values))
 
-    return [v/t_len for v in total]
+    return total/t_len
 
 
-df = pd.read_csv("../051.Data/411.merged_CSV/data.CSV", sep=";")
-
-# filter Dataset
-df = df[['IDSTUD', 'Language', 'Variable', 'Value']].drop_duplicates()
+df = pd.read_csv("../051.Data/411.merged_CSV/filtered_data.tsv", sep="\t")
 
 print(df)
 print(df.groupby(["Language"])["Value"].count())
@@ -65,7 +62,6 @@ print("\n__________________________")
 
 #exit()
 
-#TODO: alle Maße auch noch auf String-Ebene
 text_based_measures = {
     "GST": text_similarity.gst,
 #    "LCS": text_similarity.longest_common_substring,
@@ -74,9 +70,9 @@ text_based_measures = {
 }
 
 corpus_based_measures = {
-    "meanLen": getMeanLen,
-    "FractionUnique": corpusVariance.getFractionUnique,
-    "TTR": corpusVariance.computeTTR
+#    "meanLen": getMeanLen,
+#    "FractionUnique": corpusVariance.getFractionUnique,
+#    "TTR": corpusVariance.computeTTR
 }
 
 
@@ -85,10 +81,7 @@ def run_task(lang, var):
     print(lang, var, len(df_prompt))
 
     cb_vals = [corpus_based_measures.get(m)(df_prompt) for m in corpus_based_measures.keys()]
-    tb_vals = []
-    for measure in text_based_measures.keys():
-        dict = {measure: text_based_measures.get(measure)}
-        tb_vals.append(getMeanMeasureValues(df_prompt, dict)[0])
+    tb_vals = [getMeanMeasureValues(df_prompt, m) for m in text_based_measures.keys()]
 
     return [lang, var, len(df_prompt)] + cb_vals + tb_vals
 

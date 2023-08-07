@@ -33,6 +33,8 @@ def computeTTR(df, tokenspersample=tokensPerSample, iter=iterations):
         tokens = word_tokenize(value)
         tokens = [x.lower() for x in tokens]
         all_tokens = all_tokens + tokens
+    if tokensPerSample > len(all_tokens):
+        tokenspersample = len(all_tokens)
     # print(all_tokens)
     ttrs = []
     for i in range(iter):
