@@ -86,16 +86,17 @@ def run_task(lang, var):
     return [lang, var, len(df_prompt)] + cb_vals + tb_vals
 
 
-tasks_args = []
+if __name__ == "__main__":
+    tasks_args = []
 
-df_var = pd.DataFrame(columns = ["Language", "Variable", "numAnswers"] + [m for m in corpus_based_measures.keys()] + ["mean" + m for m in text_based_measures.keys()])
-for lang in df['Language'].unique():
-    #print(lang)
-    for var in df['Variable'].unique():
-        tasks_args.append((lang, var))
+    df_var = pd.DataFrame(columns = ["Language", "Variable", "numAnswers"] + [m for m in corpus_based_measures.keys()] + ["mean" + m for m in text_based_measures.keys()])
+    for lang in df['Language'].unique():
+        #print(lang)
+        for var in df['Variable'].unique():
+            tasks_args.append((lang, var))
 
-results = parallelprozessing.run_parallel(run_task, tasks_args)
-#print("{:.4f}".format(num))
-for res in results:
-    df_var.loc[len(df_var.index)] = res
-df_var.to_csv('variance.tsv', sep="\t")
+    results = parallelprozessing.run_parallel(run_task, tasks_args)
+    #print("{:.4f}".format(num))
+    for res in results:
+        df_var.loc[len(df_var.index)] = res
+    df_var.to_csv('variance.tsv', sep="\t")
