@@ -6,8 +6,6 @@ from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import gst_calculation
-import torch
-from pytorch_pretrained_bert import BertTokenizer, BertModel
 
 nltk.download('wordnet')
 nltk.download('omw-1.4')
@@ -158,38 +156,3 @@ def vector_cosine(text1, text2, lemmatize=False):
 
     return similarity[0][0], similarity[0][0], []
 
-
-def vectorize_with_bert(text):
-    # Load the BERT model and tokenizer
-    model_name = 'bert-base-uncased'  # Pre-trained BERT model name
-    tokenizer = BertTokenizer.from_pretrained(model_name)
-    model = BertModel.from_pretrained(model_name)
-
-    # Tokenize the input text
-    tokens = tokenizer.tokenize(text)
-    token_ids = tokenizer.convert_tokens_to_ids(tokens)
-
-    # Convert the token IDs to PyTorch tensors
-    input_ids = torch.tensor([token_ids])
-
-    # Set the model to evaluation mode
-    model.eval()
-
-    # Vectorize the input text using BERT
-    with torch.no_grad():
-        encoded_layers, _ = model(input_ids)
-
-    # Get the vector representation from the last BERT layer
-    vectorized_text = encoded_layers[-1].squeeze(0)
-
-    return vectorized_text
-
-
-def bert_vector_cosine(text1, text2):
-    vector1 = vectorize_with_bert(text1)
-    vector2 = vectorize_with_bert(text2)
-
-    # Calculate the cosine similarity
-    similarity = cosine_similarity(vector1, vector2)
-
-    return similarity[0][0], similarity[0][0], []

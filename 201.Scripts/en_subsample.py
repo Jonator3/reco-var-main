@@ -5,9 +5,7 @@ subsample_sizes = [3000, 2000, 1000, 500]
 subsample_count = 10
 
 
-def run_task(lang, var, subset_size=3000):
-    df_prompt = df[(df['Language'] == lang) & (df['Variable'] == var)]
-    df_prompt = df_prompt.sample(subset_size)
+def run_task(lang, var, df_prompt):
     print(lang, var, len(df_prompt))
 
     cb_vals = [corpus_based_measures.get(m)(df_prompt) for m in corpus_based_measures.keys()]
@@ -25,7 +23,9 @@ if __name__ == "__main__":
     for subsample_size in subsample_sizes:
         for var in df['Variable'].unique():
             for _ in range(subsample_count):
-                tasks_args.append((lang, var, subsample_size))
+                df_prompt = df[(df['Language'] == lang) & (df['Variable'] == var)]
+                df_prompt = df_prompt.sample(subsample_size)
+                tasks_args.append((lang, var, df_prompt))
 
     results = parallelprozessing.run_parallel(run_task, tasks_args)
 
