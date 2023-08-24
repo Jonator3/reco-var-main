@@ -16,11 +16,21 @@ def getMeanLen(df):
     return meanLen
 
 
-def getMeanMeasureValues(df, measure, verbose=False):
-    values = [str(val) for val in df["Value"]]
+def getMeanMeasureValues(df, measure, token_based=False, verbose=False):
+    values = []
+    if token_based:
+        values = [eval(str(val)) for val in df["tokenized_value"]]
+    else:
+        values = [str(val) for val in df["Value"]]
     ids = [str(id) for id in df["IDSTUD"]]
     lang = [l for l in df["Language"]][0]
     prompt = [p for p in df["Variable"]][0]
+    measure_func = lambda x, y: 0.0
+    if token_based:
+        measure_func = token_based_measures.get(measure)
+        measure = "token_"+measure
+    else:
+        measure_func = text_based_measures.get(measure)
 
     total = 0
     t_len = 0
@@ -37,7 +47,7 @@ def getMeanMeasureValues(df, measure, verbose=False):
         line = [ids[si]] + ["-" for _ in range(si)]
         for si2 in range(si+1, len(values)):
             vi = values[si2]
-            measure_res = text_based_measures.get(measure)(v0, vi)[1]
+            measure_res = measure_func(v0, vi)[1]
             line.append(measure_res)
             total += measure_res
         t_len += len(values) - 1 - si
@@ -48,7 +58,7 @@ def getMeanMeasureValues(df, measure, verbose=False):
     return total/t_len
 
 
-df = pd.read_csv("../051.Data/411.merged_CSV/filtered_data.tsv", sep="\t")
+df = pd.read_csv("../051.Data/411.merged_CSV/filtered_data_tkn.tsv", sep="\t")
 
 print(df)
 print(df.groupby(["Language"])["Value"].count())
@@ -63,10 +73,15 @@ print("\n__________________________")
 #exit()
 
 text_based_measures = {
-    "GST": text_similarity.gst,
+#    "GST": text_similarity.gst,
 #    "LCS": text_similarity.longest_common_substring,
 #    "Levenstein": text_similarity.levenshtein_distance,
 #    "VCos": text_similarity.vector_cosine
+}
+
+token_based_measures = {
+    "LCS": text_similarity.longest_common_substring,
+#    "Levenstein": text_similarity.levenshtein_distance
 }
 
 corpus_based_measures = {
@@ -81,9 +96,10 @@ def run_task(lang, var):
     print(lang, var, len(df_prompt))
 
     cb_vals = [corpus_based_measures.get(m)(df_prompt) for m in corpus_based_measures.keys()]
-    tb_vals = [getMeanMeasureValues(df_prompt, m) for m in text_based_measures.keys()]
+    txb_vals = [getMeanMeasureValues(df_prompt, m) for m in text_based_measures.keys()]
+    tokb_vals = [getMeanMeasureValues(df_prompt, m, True) for m in token_based_measures.keys()]
 
-    return [lang, var, len(df_prompt)] + cb_vals + tb_vals
+    return [lang, var, len(df_prompt)] + cb_vals + txb_vals + tokb_vals
 
 
 if __name__ == "__main__":
